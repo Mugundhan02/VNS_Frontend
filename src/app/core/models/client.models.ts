@@ -41,11 +41,17 @@ export interface ClientResponse {
   faxNumber?: string;
   emailId?: string;
   websiteName?: string;
+  accountNumber?: string;
   accountName?: string;
   accountType?: string;
   bankName?: string;
   bankBranch?: string;
+  branchCode?: string;
   ifscCode?: string;
+  panCardNumber?: string;
+  tinNumber?: string;
+  cstNumber?: string;
+  aadhaarNumber?: string;
   estimateUnit?: number;
   estimateRate?: number;
   estimateAmount?: number;

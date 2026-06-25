@@ -1,1 +1,28 @@
 .search-input { max-width: 320px; }
+
+.two-col-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 700px) { .two-col-layout { grid-template-columns: 1fr; } }
+
+.form-col { display: flex; flex-direction: column; }
+
+.col-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 6px 0 10px;
+  border-bottom: 2px solid var(--primary-light);
+  margin-bottom: 14px;
+}
+
+.input-btn-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.input-btn-row .form-control { flex: 1; }

@@ -4,6 +4,7 @@ import { SupplierService } from '../../core/services/supplier.service';
 import { SupplierResponse, SupplierRequest } from '../../core/models/supplier.models';
 import { AuthService } from '../../core/services/auth.service';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { IfscService } from '../../core/services/ifsc.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -13,8 +14,9 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrl: './suppliers.css',
 })
 export class Suppliers implements OnInit {
-  private readonly svc = inject(SupplierService);
-  readonly auth = inject(AuthService);
+  private readonly svc     = inject(SupplierService);
+  private readonly ifscSvc = inject(IfscService);
+  readonly auth            = inject(AuthService);
 
   items          = signal<SupplierResponse[]>([]);
   loading        = signal(true);
@@ -25,6 +27,8 @@ export class Suppliers implements OnInit {
   editingId      = signal<number | null>(null);
   deleteTargetId = signal<number | null>(null);
   search         = signal('');
+  ifscLooking    = signal(false);
+  ifscError      = signal('');
 
   form: SupplierRequest = { supplierName: '' };
 
@@ -47,6 +51,7 @@ export class Suppliers implements OnInit {
     this.form = { supplierName: '' };
     this.editingId.set(null);
     this.errorMsg.set('');
+    this.ifscError.set('');
     this.showForm.set(true);
   }
 
@@ -54,11 +59,31 @@ export class Suppliers implements OnInit {
     this.editingId.set(item.supplierId);
     this.form = { ...item };
     this.errorMsg.set('');
+    this.ifscError.set('');
     this.showForm.set(true);
+  }
+
+  lookupIfsc(): void {
+    const ifsc = this.form.ifscCode?.trim() ?? '';
+    if (ifsc.length !== 11) { this.ifscError.set('IFSC must be 11 characters.'); return; }
+    this.ifscError.set('');
+    this.ifscLooking.set(true);
+    this.ifscSvc.lookup(ifsc).subscribe({
+      next: data => {
+        this.ifscLooking.set(false);
+        if (!data) { this.ifscError.set('IFSC not found.'); return; }
+        this.form.bankName   = data.BANK;
+        this.form.bankBranch = data.BRANCH;
+        this.form.branchCode = data.IFSC.substring(0, 4);
+      },
+      error: () => { this.ifscLooking.set(false); this.ifscError.set('Could not fetch IFSC details.'); },
+    });
   }
 
   save(): void {
     if (!this.form.supplierName?.trim()) { this.errorMsg.set('Supplier name is required.'); return; }
+    if (!this.form.accountNumber?.trim()) { this.errorMsg.set('Account number is required.'); return; }
+    if (!this.form.ifscCode?.trim()) { this.errorMsg.set('IFSC code is required.'); return; }
     this.saving.set(true);
     this.errorMsg.set('');
     const id = this.editingId();

@@ -40,11 +40,16 @@ export interface SubContractorResponse {
   faxNumber?: string;
   emailId?: string;
   websiteName?: string;
-  bankName?: string;
-  bankBranch?: string;
+  accountNumber?: string;
   accountName?: string;
   accountType?: string;
+  bankName?: string;
+  bankBranch?: string;
+  branchCode?: string;
   ifscCode?: string;
+  panCardNumber?: string;
+  tinNumber?: string;
+  aadhaarNumber?: string;
   workName?: string;
   esr?: number;
   rate?: number;

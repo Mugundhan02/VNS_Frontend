@@ -5,6 +5,7 @@ import { ClientService } from '../../core/services/client.service';
 import { ClientResponse, ClientRequest } from '../../core/models/client.models';
 import { AuthService } from '../../core/services/auth.service';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { IfscService } from '../../core/services/ifsc.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -14,18 +15,21 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrl: './clients.css',
 })
 export class Clients implements OnInit {
-  private readonly svc = inject(ClientService);
-  readonly auth = inject(AuthService);
+  private readonly svc     = inject(ClientService);
+  private readonly ifscSvc = inject(IfscService);
+  readonly auth            = inject(AuthService);
 
-  items         = signal<ClientResponse[]>([]);
-  loading       = signal(true);
-  saving        = signal(false);
-  errorMsg      = signal('');
-  showForm      = signal(false);
-  showConfirm   = signal(false);
-  editingId     = signal<number | null>(null);
+  items          = signal<ClientResponse[]>([]);
+  loading        = signal(true);
+  saving         = signal(false);
+  errorMsg       = signal('');
+  showForm       = signal(false);
+  showConfirm    = signal(false);
+  editingId      = signal<number | null>(null);
   deleteTargetId = signal<number | null>(null);
-  search        = signal('');
+  search         = signal('');
+  ifscLooking    = signal(false);
+  ifscError      = signal('');
 
   form: ClientRequest = this.emptyForm();
 
@@ -34,9 +38,7 @@ export class Clients implements OnInit {
     return this.items().filter(c => c.clientName.toLowerCase().includes(q));
   }
 
-  ngOnInit(): void {
-    this.load();
-  }
+  ngOnInit(): void { this.load(); }
 
   load(): void {
     this.loading.set(true);
@@ -50,6 +52,7 @@ export class Clients implements OnInit {
     this.form = this.emptyForm();
     this.editingId.set(null);
     this.errorMsg.set('');
+    this.ifscError.set('');
     this.showForm.set(true);
   }
 
@@ -68,17 +71,41 @@ export class Clients implements OnInit {
       faxNumber: item.faxNumber,
       emailId: item.emailId,
       websiteName: item.websiteName,
+      accountNumber: item.accountNumber,
       accountName: item.accountName,
       accountType: item.accountType,
       bankName: item.bankName,
       bankBranch: item.bankBranch,
+      branchCode: item.branchCode,
       ifscCode: item.ifscCode,
+      panCardNumber: item.panCardNumber,
+      tinNumber: item.tinNumber,
+      cstNumber: item.cstNumber,
+      aadhaarNumber: item.aadhaarNumber,
       estimateUnit: item.estimateUnit,
       estimateRate: item.estimateRate,
       estimateAmount: item.estimateAmount,
     };
     this.errorMsg.set('');
+    this.ifscError.set('');
     this.showForm.set(true);
+  }
+
+  lookupIfsc(): void {
+    const ifsc = this.form.ifscCode?.trim() ?? '';
+    if (ifsc.length !== 11) { this.ifscError.set('IFSC code must be 11 characters.'); return; }
+    this.ifscError.set('');
+    this.ifscLooking.set(true);
+    this.ifscSvc.lookup(ifsc).subscribe({
+      next: data => {
+        this.ifscLooking.set(false);
+        if (!data) { this.ifscError.set('IFSC not found. Please check the code.'); return; }
+        this.form.bankName   = data.BANK;
+        this.form.bankBranch = data.BRANCH;
+        this.form.branchCode = data.IFSC.substring(0, 4);
+      },
+      error: () => { this.ifscLooking.set(false); this.ifscError.set('Could not fetch IFSC details.'); },
+    });
   }
 
   save(): void {
@@ -96,10 +123,7 @@ export class Clients implements OnInit {
     });
   }
 
-  confirmDelete(id: number): void {
-    this.deleteTargetId.set(id);
-    this.showConfirm.set(true);
-  }
+  confirmDelete(id: number): void { this.deleteTargetId.set(id); this.showConfirm.set(true); }
 
   doDelete(): void {
     const id = this.deleteTargetId();
@@ -111,6 +135,6 @@ export class Clients implements OnInit {
   }
 
   private emptyForm(): ClientRequest {
-    return { clientName: '', estimateUnit: undefined, estimateRate: undefined, estimateAmount: undefined };
+    return { clientName: '' };
   }
 }

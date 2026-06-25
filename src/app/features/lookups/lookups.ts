@@ -4,9 +4,11 @@ import { SlicePipe } from '@angular/common';
 import { LookupService } from '../../core/services/lookup.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { IfscService } from '../../core/services/ifsc.service';
 import {
   PaymentTypeResponse, WhomResponse,
   OfficeExpenseResponse, InstallmentTermResponse,
+  CompanyBankRequest, CompanyBankResponse,
 } from '../../core/models/lookup.models';
 import { HttpErrorResponse } from '@angular/common/http';
 
