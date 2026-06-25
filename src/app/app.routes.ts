@@ -1,68 +1,35 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { Login } from './login/login';
+import { Dashboard } from './features/dashboard/dashboard';
+import { Clients } from './features/clients/clients';
+import { Suppliers } from './features/suppliers/suppliers';
+import { SubContractors } from './features/subcontractors/subcontractors';
+import { Materials } from './features/materials/materials';
+import { Transactions } from './features/transactions/transactions';
+import { Companies } from './features/companies/companies';
+import { Lookups } from './features/lookups/lookups';
+import { Users } from './features/users/users';
+import { PageNotFound } from './core/components/page-not-found/page-not-found';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
-  // Public routes
-  {
-    path: 'login',
-    canActivate: [guestGuard],
-    loadComponent: () => import('./login/login').then(m => m.Login),
-  },
+  // Public
+  { path: 'login', canActivate: [guestGuard], component: Login },
 
-  // Protected routes
-  {
-    path: 'dashboard',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard),
-  },
-  {
-    path: 'clients',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/clients/clients').then(m => m.Clients),
-  },
-  {
-    path: 'suppliers',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/suppliers/suppliers').then(m => m.Suppliers),
-  },
-  {
-    path: 'subcontractors',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/subcontractors/subcontractors').then(m => m.SubContractors),
-  },
-  {
-    path: 'materials',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/materials/materials').then(m => m.Materials),
-  },
-  {
-    path: 'jobworks',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/materials/materials').then(m => m.Materials),
-  },
-  {
-    path: 'transactions',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/transactions/transactions').then(m => m.Transactions),
-  },
-  {
-    path: 'companies',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/companies/companies').then(m => m.Companies),
-  },
-  {
-    path: 'lookups',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/lookups/lookups').then(m => m.Lookups),
-  },
-  {
-    path: 'users',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/users/users').then(m => m.Users),
-  },
+  // Protected
+  { path: 'dashboard',      canActivate: [authGuard], component: Dashboard },
+  { path: 'clients',        canActivate: [authGuard], component: Clients },
+  { path: 'suppliers',      canActivate: [authGuard], component: Suppliers },
+  { path: 'subcontractors', canActivate: [authGuard], component: SubContractors },
+  { path: 'materials',      canActivate: [authGuard], component: Materials },
+  { path: 'jobworks',       canActivate: [authGuard], component: Materials },
+  { path: 'transactions',   canActivate: [authGuard], component: Transactions },
+  { path: 'companies',      canActivate: [authGuard], component: Companies },
+  { path: 'lookups',        canActivate: [authGuard], component: Lookups },
+  { path: 'users',          canActivate: [authGuard], component: Users },
 
-  // Fallback
-  { path: '**', redirectTo: 'dashboard' },
+  
+  { path: '**', component: PageNotFound },
 ];
