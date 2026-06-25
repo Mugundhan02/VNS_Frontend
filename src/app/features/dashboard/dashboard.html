@@ -1,82 +1,205 @@
-<div class="page-content">
-  <div class="page-header">
-    <div>
-      <h2 class="page-title">Dashboard</h2>
-      <p class="page-subtitle">Welcome back, {{ auth.currentUser()?.userName }} · {{ auth.currentUser()?.companyName }}</p>
+<!-- Non-admin/owner: simple welcome -->
+@if (!isAdminOrOwner) {
+  <div class="db-page">
+    <div class="db-welcome">
+      <div class="db-welcome-icon">🏗️</div>
+      <h2>Welcome, {{ auth.currentUser()?.userName }}</h2>
+      <p>{{ auth.currentUser()?.companyName }}</p>
+      <div class="db-welcome-links">
+        <a routerLink="/materials" class="btn btn-primary">View Materials</a>
+        <a routerLink="/jobworks"  class="btn btn-secondary">View Job Works</a>
+      </div>
     </div>
   </div>
+}
 
-  <div class="stats-grid">
-    @if (auth.hasRole('Owner','Admin')) {
-      <div class="stat-card">
-        <div class="stat-label">Clients</div>
-        <div class="stat-value">{{ clientCount() }}</div>
-        <a routerLink="/clients" class="stat-link">View all →</a>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Suppliers</div>
-        <div class="stat-value">{{ supplierCount() }}</div>
-        <a routerLink="/suppliers" class="stat-link">View all →</a>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Sub-Contractors</div>
-        <div class="stat-value">{{ subCount() }}</div>
-        <a routerLink="/subcontractors" class="stat-link">View all →</a>
-      </div>
-    }
-    <div class="stat-card">
-      <div class="stat-label">Materials</div>
-      <div class="stat-value">{{ materialCount() }}</div>
-      <a routerLink="/materials" class="stat-link">View all →</a>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Job Works</div>
-      <div class="stat-value">{{ jobWorkCount() }}</div>
-      <a routerLink="/jobworks" class="stat-link">View all →</a>
-    </div>
-  </div>
+<!-- Owner / Admin: full financial dashboard -->
+@if (isAdminOrOwner) {
+  <div class="db-page">
 
-  <div class="quick-actions">
-    <h3 class="section-heading">Quick Actions</h3>
-    <div class="action-grid">
-      @if (auth.hasRole('Owner','Admin')) {
-        <a routerLink="/clients" class="action-card">
-          <span class="action-icon">👥</span>
-          <span class="action-label">Manage Clients</span>
+    <!-- ── Company Summary ─────────────────────────────────────────── -->
+    <div class="db-section">
+      <div class="db-section-header">Company</div>
+      <div class="db-summary-bar">
+        <div class="db-field-group">
+          <label class="db-field-label">Company Name</label>
+          <select class="db-select"
+            [ngModel]="selectedCompanyId()"
+            (ngModelChange)="onCompanyChange($event)">
+            @for (c of companies(); track c.companyId) {
+              <option [ngValue]="c.companyId">{{ c.companyName }}</option>
+            }
+          </select>
+        </div>
+        <div class="db-stat-group">
+          <div class="db-stat">
+            <span class="db-stat-label">Credits Amount</span>
+            <span class="db-stat-val credit">{{ (companySummary()?.creditsAmount ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="db-stat">
+            <span class="db-stat-label">Debits Amount</span>
+            <span class="db-stat-val debit">{{ (companySummary()?.debitsAmount ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="db-stat">
+            <span class="db-stat-label">Balance Amount</span>
+            <span class="db-stat-val" [class.credit]="(companySummary()?.balanceAmount ?? 0) >= 0" [class.debit]="(companySummary()?.balanceAmount ?? 0) < 0">
+              {{ (companySummary()?.balanceAmount ?? 0) | number:'1.2-2' }}
+            </span>
+          </div>
+        </div>
+        <a routerLink="/transactions" class="db-action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Company Transaction
         </a>
-        <a routerLink="/transactions" class="action-card">
-          <span class="action-icon">📊</span>
-          <span class="action-label">Transactions</span>
+      </div>
+    </div>
+
+    <!-- ── Client Details ──────────────────────────────────────────── -->
+    <div class="db-section">
+      <div class="db-section-header">Client Details</div>
+      <div class="db-summary-bar">
+        <div class="db-field-group">
+          <label class="db-field-label">Client Name</label>
+          <select class="db-select"
+            [ngModel]="selectedClientId()"
+            (ngModelChange)="onClientChange($event)">
+            @for (c of clients(); track c.clientId) {
+              <option [ngValue]="c.clientId">{{ c.clientName }}</option>
+            }
+          </select>
+        </div>
+        <div class="db-stat-group">
+          <div class="db-stat">
+            <span class="db-stat-label">Credits Amount</span>
+            <span class="db-stat-val credit">{{ (clientSummary()?.creditsAmount ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="db-stat">
+            <span class="db-stat-label">Debits Amount</span>
+            <span class="db-stat-val debit">{{ (clientSummary()?.debitsAmount ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="db-stat">
+            <span class="db-stat-label">Balance Amount</span>
+            <span class="db-stat-val" [class.credit]="(clientSummary()?.balanceAmount ?? 0) >= 0" [class.debit]="(clientSummary()?.balanceAmount ?? 0) < 0">
+              {{ (clientSummary()?.balanceAmount ?? 0) | number:'1.2-2' }}
+            </span>
+          </div>
+        </div>
+        <a routerLink="/transactions" class="db-action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Client Transaction
         </a>
-        <a routerLink="/suppliers" class="action-card">
-          <span class="action-icon">🚚</span>
-          <span class="action-label">Suppliers</span>
-        </a>
-        <a routerLink="/subcontractors" class="action-card">
-          <span class="action-icon">👷</span>
-          <span class="action-label">Sub-Contractors</span>
-        </a>
-      }
-      <a routerLink="/materials" class="action-card">
-        <span class="action-icon">📦</span>
-        <span class="action-label">Materials</span>
-      </a>
-      <a routerLink="/jobworks" class="action-card">
-        <span class="action-icon">💼</span>
-        <span class="action-label">Job Works</span>
-      </a>
-      @if (auth.hasRole('Owner','Admin')) {
-        <a routerLink="/lookups" class="action-card">
-          <span class="action-icon">⚙️</span>
-          <span class="action-label">Lookups</span>
-        </a>
-      }
-      @if (auth.hasRole('Owner')) {
-        <a routerLink="/users" class="action-card">
-          <span class="action-icon">🔑</span>
-          <span class="action-label">User Management</span>
-        </a>
+      </div>
+
+      <!-- Estimate row -->
+      <div class="db-estimate-bar">
+        <span class="db-est-label">Estimated</span>
+        <div class="db-est-group">
+          <div class="db-est-item"><span class="db-est-key">Units</span><span class="db-est-val">{{ (clientSummary()?.estimateUnits ?? 0) | number:'1.2-2' }}</span></div>
+          <div class="db-est-item"><span class="db-est-key">Rate</span><span class="db-est-val">{{ (clientSummary()?.estimateRate ?? 0) | number:'1.2-2' }}</span></div>
+          <div class="db-est-item"><span class="db-est-key">Amount</span><span class="db-est-val">{{ (clientSummary()?.estimateAmount ?? 0) | number:'1.2-2' }}</span></div>
+          <div class="db-est-item"><span class="db-est-key">Est. Amt. Received</span><span class="db-est-val credit">{{ (clientSummary()?.estimateAmountReceived ?? 0) | number:'1.2-2' }}</span></div>
+          <div class="db-est-item"><span class="db-est-key">Est. Amt. Expenses</span><span class="db-est-val debit">{{ (clientSummary()?.estimateAmountExpenses ?? 0) | number:'1.2-2' }}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Supplier Details ────────────────────────────────────────── -->
+    <div class="db-section">
+      <div class="db-section-header">
+        Supplier Details
+        @if (supplierSummaries().length) {
+          <span class="db-totals-inline">
+            {{ supplierTotals.payable | number:'1.2-2' }} &nbsp;|&nbsp;
+            {{ supplierTotals.paid    | number:'1.2-2' }} &nbsp;|&nbsp;
+            <span [class.debit]="supplierTotals.balance > 0">{{ supplierTotals.balance | number:'1.2-2' }}</span>
+          </span>
+        }
+      </div>
+
+      @if (loadingSupplier()) {
+        <div class="db-loading"><div class="spinner"></div></div>
+      } @else if (supplierSummaries().length === 0) {
+        <div class="db-empty">No supplier transactions for this client.</div>
+      } @else {
+        <div class="db-table-wrap">
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th>Supplier Name</th>
+                <th class="num">Payable Amt.</th>
+                <th class="num">Paid Amount</th>
+                <th class="num">Balance Amt.</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of supplierSummaries(); track s.supplierId) {
+                <tr>
+                  <td>{{ s.supplierName }}</td>
+                  <td class="num">{{ s.payableAmount | number:'1.2-2' }}</td>
+                  <td class="num credit">{{ s.paidAmount | number:'1.2-2' }}</td>
+                  <td class="num" [class.debit]="s.balanceAmount > 0">{{ s.balanceAmount | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="db-section-footer">
+          <a routerLink="/transactions" class="db-action-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Supplier Transaction
+          </a>
+        </div>
       }
     </div>
+
+    <!-- ── Sub-Contractor Details ──────────────────────────────────── -->
+    <div class="db-section">
+      <div class="db-section-header">
+        Sub Contractor Details
+        @if (subConSummaries().length) {
+          <span class="db-totals-inline">
+            {{ subConTotals.payable | number:'1.2-2' }} &nbsp;|&nbsp;
+            {{ subConTotals.paid    | number:'1.2-2' }} &nbsp;|&nbsp;
+            <span [class.debit]="subConTotals.balance < 0" [class.credit]="subConTotals.balance >= 0">{{ subConTotals.balance | number:'1.2-2' }}</span>
+          </span>
+        }
+      </div>
+
+      @if (loadingSub()) {
+        <div class="db-loading"><div class="spinner"></div></div>
+      } @else if (subConSummaries().length === 0) {
+        <div class="db-empty">No sub-contractor transactions for this client.</div>
+      } @else {
+        <div class="db-table-wrap">
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th>SubContractor Name</th>
+                <th class="num">Payable Amt.</th>
+                <th class="num">Paid Amount</th>
+                <th class="num">Balance Amt.</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of subConSummaries(); track s.subContractorId) {
+                <tr>
+                  <td>{{ s.subContractorName }}</td>
+                  <td class="num">{{ s.payableAmount | number:'1.2-2' }}</td>
+                  <td class="num credit">{{ s.paidAmount | number:'1.2-2' }}</td>
+                  <td class="num" [class.debit]="s.balanceAmount < 0" [class.credit]="s.balanceAmount >= 0">{{ s.balanceAmount | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="db-section-footer">
+          <a routerLink="/transactions" class="db-action-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            SubContractor Transaction
+          </a>
+        </div>
+      }
+    </div>
+
   </div>
-</div>
+}

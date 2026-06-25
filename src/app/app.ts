@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 
 interface NavItem {
@@ -7,7 +7,6 @@ interface NavItem {
   icon: string;
   route: string;
   roles?: string[];
-  children?: NavItem[];
 }
 
 @Component({
@@ -18,40 +17,39 @@ interface NavItem {
 })
 export class App {
   readonly auth = inject(AuthService);
-  readonly router = inject(Router);
 
-  sidebarOpen = signal(true);
+  sidebarOpen  = signal(true);
+  userMenuOpen = signal(false);
 
   readonly navItems: NavItem[] = [
-    { label: 'Dashboard',      icon: 'grid',        route: '/dashboard' },
-    { label: 'Clients',        icon: 'users',       route: '/clients',        roles: ['Owner','Admin'] },
-    { label: 'Suppliers',      icon: 'truck',       route: '/suppliers',      roles: ['Owner','Admin'] },
-    { label: 'Sub-Contractors',icon: 'hard-hat',    route: '/subcontractors', roles: ['Owner','Admin'] },
-    { label: 'Materials',      icon: 'package',     route: '/materials',      roles: ['Owner','Admin','User'] },
-    { label: 'Job Works',      icon: 'briefcase',   route: '/jobworks',       roles: ['Owner','Admin','User'] },
-    { label: 'Transactions',   icon: 'activity',    route: '/transactions',   roles: ['Owner','Admin'] },
-    { label: 'Companies',      icon: 'building',    route: '/companies',      roles: ['Owner','Admin'] },
-    { label: 'Lookups',        icon: 'settings',    route: '/lookups',        roles: ['Owner','Admin'] },
-    { label: 'Users',          icon: 'user-cog',    route: '/users',          roles: ['Owner'] },
+    { label: 'Dashboard',       icon: 'grid',      route: '/dashboard' },
+    { label: 'Clients',         icon: 'users',     route: '/clients',        roles: ['Owner','Admin'] },
+    { label: 'Suppliers',       icon: 'truck',     route: '/suppliers',      roles: ['Owner','Admin'] },
+    { label: 'Sub-Contractors', icon: 'hard-hat',  route: '/subcontractors', roles: ['Owner','Admin'] },
+    { label: 'Materials',       icon: 'package',   route: '/materials',      roles: ['Owner','Admin','User'] },
+    { label: 'Job Works',       icon: 'briefcase', route: '/jobworks',       roles: ['Owner','Admin','User'] },
+    { label: 'Transactions',    icon: 'activity',  route: '/transactions',   roles: ['Owner','Admin'] },
+    { label: 'Companies',       icon: 'building',  route: '/companies',      roles: ['Owner','Admin'] },
+    { label: 'Lookups',         icon: 'settings',  route: '/lookups',        roles: ['Owner','Admin'] },
+    { label: 'Users',           icon: 'user-cog',  route: '/users',          roles: ['Owner'] },
   ];
 
   visibleNavItems = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return [];
-    return this.navItems.filter(item =>
-      !item.roles || item.roles.includes(user.role)
-    );
+    return this.navItems.filter(i => !i.roles || i.roles.includes(user.role));
   });
 
   isLoggedIn = computed(() => this.auth.isLoggedIn());
 
   logout(): void {
+    this.userMenuOpen.set(false);
     this.auth.logout();
   }
 
-  toggleSidebar(): void {
-    this.sidebarOpen.update(v => !v);
-  }
+  toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
+  toggleUserMenu(): void { this.userMenuOpen.update(v => !v); }
+  closeUserMenu(): void  { this.userMenuOpen.set(false); }
 
   getIcon(name: string): string {
     const icons: Record<string, string> = {
