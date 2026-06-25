@@ -1,0 +1,114 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">User Management</h2>
+      <p class="page-subtitle">Manage company users and their access roles</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()">+ Add User</button>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading-wrapper"><div class="spinner"></div></div>
+    } @else if (items().length === 0) {
+      <div class="empty-state"><p>No users found.</p></div>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Username</th><th>Company</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track item.companyUserId) {
+              <tr>
+                <td>{{ item.companyUserId }}</td>
+                <td class="font-medium">{{ item.userName }}</td>
+                <td>{{ item.companyName }}</td>
+                <td>
+                  <span class="badge" [class.badge-primary]="item.userType === 'Owner'" [class.badge-warning]="item.userType === 'Admin'" [class.badge-gray]="item.userType === 'User'">
+                    {{ item.userType }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-success]="item.isActive" [class.badge-danger]="!item.isActive">
+                    {{ item.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="table-actions">
+                    <button class="btn btn-secondary btn-sm" (click)="openEdit(item)">Edit</button>
+                    <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.companyUserId)">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ isEditing ? 'Edit User' : 'Add User' }}</h2>
+        <button class="btn btn-ghost btn-icon" (click)="showForm.set(false)" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (errorMsg()) { <div class="alert alert-danger">{{ errorMsg() }}</div> }
+
+        @if (!isEditing) {
+          <div class="form-group">
+            <label class="form-label">Company <span class="required">*</span></label>
+            <select class="form-control" [(ngModel)]="createForm.companyId">
+              <option [ngValue]="0" disabled>Select company…</option>
+              @for (c of companies(); track c.companyId) {
+                <option [ngValue]="c.companyId">{{ c.companyName }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Username <span class="required">*</span></label>
+            <input class="form-control" [(ngModel)]="createForm.userName" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password <span class="required">*</span></label>
+            <input class="form-control" type="password" [(ngModel)]="createForm.password" autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role <span class="required">*</span></label>
+            <select class="form-control" [(ngModel)]="createForm.userType">
+              @for (t of userTypes; track t) { <option [ngValue]="t">{{ t }}</option> }
+            </select>
+          </div>
+        } @else {
+          <div class="form-group">
+            <label class="form-label">Username <span class="required">*</span></label>
+            <input class="form-control" [(ngModel)]="updateForm.userName" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role <span class="required">*</span></label>
+            <select class="form-control" [(ngModel)]="updateForm.userType">
+              @for (t of userTypes; track t) { <option [ngValue]="t">{{ t }}</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" [(ngModel)]="updateForm.isActive" /> Active
+            </label>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showConfirm()) {
+  <app-confirm-dialog title="Delete User" message="Delete this user account permanently?" (confirm)="doDelete()" (cancel)="showConfirm.set(false)" />
+}

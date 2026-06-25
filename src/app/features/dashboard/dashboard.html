@@ -1,0 +1,82 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Dashboard</h2>
+      <p class="page-subtitle">Welcome back, {{ auth.currentUser()?.userName }} · {{ auth.currentUser()?.companyName }}</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    @if (auth.hasRole('Owner','Admin')) {
+      <div class="stat-card">
+        <div class="stat-label">Clients</div>
+        <div class="stat-value">{{ clientCount() }}</div>
+        <a routerLink="/clients" class="stat-link">View all →</a>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Suppliers</div>
+        <div class="stat-value">{{ supplierCount() }}</div>
+        <a routerLink="/suppliers" class="stat-link">View all →</a>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sub-Contractors</div>
+        <div class="stat-value">{{ subCount() }}</div>
+        <a routerLink="/subcontractors" class="stat-link">View all →</a>
+      </div>
+    }
+    <div class="stat-card">
+      <div class="stat-label">Materials</div>
+      <div class="stat-value">{{ materialCount() }}</div>
+      <a routerLink="/materials" class="stat-link">View all →</a>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Job Works</div>
+      <div class="stat-value">{{ jobWorkCount() }}</div>
+      <a routerLink="/jobworks" class="stat-link">View all →</a>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <h3 class="section-heading">Quick Actions</h3>
+    <div class="action-grid">
+      @if (auth.hasRole('Owner','Admin')) {
+        <a routerLink="/clients" class="action-card">
+          <span class="action-icon">👥</span>
+          <span class="action-label">Manage Clients</span>
+        </a>
+        <a routerLink="/transactions" class="action-card">
+          <span class="action-icon">📊</span>
+          <span class="action-label">Transactions</span>
+        </a>
+        <a routerLink="/suppliers" class="action-card">
+          <span class="action-icon">🚚</span>
+          <span class="action-label">Suppliers</span>
+        </a>
+        <a routerLink="/subcontractors" class="action-card">
+          <span class="action-icon">👷</span>
+          <span class="action-label">Sub-Contractors</span>
+        </a>
+      }
+      <a routerLink="/materials" class="action-card">
+        <span class="action-icon">📦</span>
+        <span class="action-label">Materials</span>
+      </a>
+      <a routerLink="/jobworks" class="action-card">
+        <span class="action-icon">💼</span>
+        <span class="action-label">Job Works</span>
+      </a>
+      @if (auth.hasRole('Owner','Admin')) {
+        <a routerLink="/lookups" class="action-card">
+          <span class="action-icon">⚙️</span>
+          <span class="action-label">Lookups</span>
+        </a>
+      }
+      @if (auth.hasRole('Owner')) {
+        <a routerLink="/users" class="action-card">
+          <span class="action-icon">🔑</span>
+          <span class="action-label">User Management</span>
+        </a>
+      }
+    </div>
+  </div>
+</div>

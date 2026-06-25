@@ -1,0 +1,159 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Lookups</h2>
+      <p class="page-subtitle">Manage reference data used across the application</p>
+    </div>
+    @if (auth.hasRole('Owner','Admin')) {
+      <button class="btn btn-primary" (click)="openCreate()">+ Add {{ tabLabel(activeTab()) | slice:0:-1 }}</button>
+    }
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab() === 'payment-types'" (click)="activeTab.set('payment-types')">Payment Types</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'whoms'" (click)="activeTab.set('whoms')">Whoms</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'office-expenses'" (click)="activeTab.set('office-expenses')">Office Expenses</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'installment-terms'" (click)="activeTab.set('installment-terms')">Installment Terms</button>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading-wrapper"><div class="spinner"></div></div>
+    } @else {
+      <div class="table-wrapper">
+
+        @if (activeTab() === 'payment-types') {
+          @if (paymentTypes().length === 0) { <div class="empty-state"><p>No payment types yet.</p></div> }
+          @else {
+            <table>
+              <thead><tr><th>#</th><th>Payment Type Name</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (item of paymentTypes(); track item.paymentTypeId) {
+                  <tr>
+                    <td>{{ item.paymentTypeId }}</td>
+                    <td class="font-medium">{{ item.paymentTypeName }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner','Admin')) { <button class="btn btn-secondary btn-sm" (click)="openEdit(item.paymentTypeId, item.paymentTypeName)">Edit</button> }
+                        @if (auth.hasRole('Owner')) { <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.paymentTypeId)">Delete</button> }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+        @if (activeTab() === 'whoms') {
+          @if (whoms().length === 0) { <div class="empty-state"><p>No whoms yet.</p></div> }
+          @else {
+            <table>
+              <thead><tr><th>#</th><th>Whom Name</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (item of whoms(); track item.whomId) {
+                  <tr>
+                    <td>{{ item.whomId }}</td>
+                    <td class="font-medium">{{ item.whomName }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner','Admin')) { <button class="btn btn-secondary btn-sm" (click)="openEdit(item.whomId, item.whomName)">Edit</button> }
+                        @if (auth.hasRole('Owner')) { <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.whomId)">Delete</button> }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+        @if (activeTab() === 'office-expenses') {
+          @if (officeExpenses().length === 0) { <div class="empty-state"><p>No office expenses yet.</p></div> }
+          @else {
+            <table>
+              <thead><tr><th>#</th><th>Expense Name</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (item of officeExpenses(); track item.officeExpenseId) {
+                  <tr>
+                    <td>{{ item.officeExpenseId }}</td>
+                    <td class="font-medium">{{ item.expenseName }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner','Admin')) { <button class="btn btn-secondary btn-sm" (click)="openEdit(item.officeExpenseId, item.expenseName)">Edit</button> }
+                        @if (auth.hasRole('Owner')) { <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.officeExpenseId)">Delete</button> }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+        @if (activeTab() === 'installment-terms') {
+          @if (installmentTerms().length === 0) { <div class="empty-state"><p>No installment terms yet.</p></div> }
+          @else {
+            <table>
+              <thead><tr><th>#</th><th>Term Name</th><th>Installments</th><th>Description</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (item of installmentTerms(); track item.installmentTermId) {
+                  <tr>
+                    <td>{{ item.installmentTermId }}</td>
+                    <td class="font-medium">{{ item.termName }}</td>
+                    <td>{{ item.numberOfInstallments ?? '—' }}</td>
+                    <td>{{ item.description || '—' }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner','Admin')) { <button class="btn btn-secondary btn-sm" (click)="openEdit(item.installmentTermId, item.termName, {num: item.numberOfInstallments, desc: item.description})">Edit</button> }
+                        @if (auth.hasRole('Owner')) { <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.installmentTermId)">Delete</button> }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+      </div>
+    }
+  </div>
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ editingId() ? 'Edit' : 'Add' }} {{ tabLabel(activeTab()) | slice:0:-1 }}</h2>
+        <button class="btn btn-ghost btn-icon" (click)="showForm.set(false)" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (errorMsg()) { <div class="alert alert-danger">{{ errorMsg() }}</div> }
+        <div class="form-group">
+          <label class="form-label">Name <span class="required">*</span></label>
+          <input class="form-control" [ngModel]="nameValue()" (ngModelChange)="nameValue.set($event)" />
+        </div>
+        @if (activeTab() === 'installment-terms') {
+          <div class="form-group">
+            <label class="form-label">Number of Installments</label>
+            <input class="form-control" type="number" min="1" max="120" [ngModel]="numInstallments()" (ngModelChange)="numInstallments.set($event)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input class="form-control" [ngModel]="description()" (ngModelChange)="description.set($event)" />
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showConfirm()) {
+  <app-confirm-dialog title="Delete Entry" message="Delete this record permanently?" (confirm)="doDelete()" (cancel)="showConfirm.set(false)" />
+}

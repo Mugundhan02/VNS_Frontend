@@ -1,0 +1,5 @@
+.tab-bar { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab-btn { padding: 8px 20px; border: 1px solid var(--gray-300); background: var(--white); border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--gray-600); transition: background .15s, color .15s; }
+.tab-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+.balance-positive { color: var(--success); font-weight: 600; }
+.balance-negative { color: var(--danger); font-weight: 600; }

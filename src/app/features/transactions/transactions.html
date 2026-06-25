@@ -1,0 +1,346 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Transactions</h2>
+      <p class="page-subtitle">Client, supplier and sub-contractor transaction ledger</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate()">+ Add Transaction</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab() === 'client'" (click)="setTab('client')">
+      Client ({{ clientTxs().length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'supplier'" (click)="setTab('supplier')">
+      Supplier ({{ suppTxs().length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'subcontractor'" (click)="setTab('subcontractor')">
+      Sub-Contractor ({{ subTxs().length }})
+    </button>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading-wrapper"><div class="spinner"></div></div>
+    } @else {
+      <div class="table-wrapper">
+
+        <!-- Client transactions -->
+        @if (activeTab() === 'client') {
+          @if (clientTxs().length === 0) {
+            <div class="empty-state"><p>No client transactions yet.</p></div>
+          } @else {
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Client</th><th>Credit (₹)</th><th>Debit (₹)</th>
+                  <th>Payment Type</th><th>By Whom</th><th>Remarks</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (tx of clientTxs(); track tx.clientTransactionId) {
+                  <tr>
+                    <td>{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="font-medium">{{ tx.clientName }}</td>
+                    <td class="balance-positive">{{ tx.creditAmount | number:'1.2-2' }}</td>
+                    <td class="balance-negative">{{ tx.debitAmount | number:'1.2-2' }}</td>
+                    <td>{{ tx.paymentTypeName || '—' }}</td>
+                    <td>{{ tx.byWhomName || '—' }}</td>
+                    <td>{{ tx.remarks || '—' }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner')) {
+                          <button class="btn btn-danger btn-sm" (click)="confirmDelete(tx.clientTransactionId)">Delete</button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+        <!-- Supplier transactions -->
+        @if (activeTab() === 'supplier') {
+          @if (suppTxs().length === 0) {
+            <div class="empty-state"><p>No supplier transactions yet.</p></div>
+          } @else {
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Client</th><th>Supplier</th><th>Material</th>
+                  <th>Qty</th><th>Rate (₹)</th><th>Amount (₹)</th><th>Paid (₹)</th><th>Balance (₹)</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (tx of suppTxs(); track tx.supplierTransactionId) {
+                  <tr>
+                    <td>{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ tx.clientName }}</td>
+                    <td class="font-medium">{{ tx.supplierName }}</td>
+                    <td>{{ tx.materialName }}</td>
+                    <td>{{ tx.quantity }} {{ tx.unit }}</td>
+                    <td>{{ tx.rate | number:'1.2-2' }}</td>
+                    <td>{{ tx.amount | number:'1.2-2' }}</td>
+                    <td class="balance-positive">{{ tx.paidAmount | number:'1.2-2' }}</td>
+                    <td [class.balance-negative]="tx.balanceAmount > 0">{{ tx.balanceAmount | number:'1.2-2' }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner')) {
+                          <button class="btn btn-danger btn-sm" (click)="confirmDelete(tx.supplierTransactionId)">Delete</button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+        <!-- SubContractor transactions -->
+        @if (activeTab() === 'subcontractor') {
+          @if (subTxs().length === 0) {
+            <div class="empty-state"><p>No sub-contractor transactions yet.</p></div>
+          } @else {
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Client</th><th>Sub-Contractor</th><th>Job Work</th>
+                  <th>Qty</th><th>Rate (₹)</th><th>Amount (₹)</th><th>Paid (₹)</th><th>Balance (₹)</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (tx of subTxs(); track tx.subContractorTransactionId) {
+                  <tr>
+                    <td>{{ tx.transactionDate | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ tx.clientName }}</td>
+                    <td class="font-medium">{{ tx.subContractorName }}</td>
+                    <td>{{ tx.jobWorkName }}</td>
+                    <td>{{ tx.quantity }} {{ tx.unit }}</td>
+                    <td>{{ tx.rate | number:'1.2-2' }}</td>
+                    <td>{{ tx.amount | number:'1.2-2' }}</td>
+                    <td class="balance-positive">{{ tx.paidAmount | number:'1.2-2' }}</td>
+                    <td [class.balance-negative]="tx.balanceAmount > 0">{{ tx.balanceAmount | number:'1.2-2' }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner')) {
+                          <button class="btn btn-danger btn-sm" (click)="confirmDelete(tx.subContractorTransactionId)">Delete</button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Add Transaction Modal -->
+@if (showForm()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title">New {{ activeTab() === 'client' ? 'Client' : activeTab() === 'supplier' ? 'Supplier' : 'Sub-Contractor' }} Transaction</h2>
+        <button class="btn btn-ghost btn-icon" (click)="showForm.set(false)" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (errorMsg()) { <div class="alert alert-danger">{{ errorMsg() }}</div> }
+
+        <!-- Client Transaction Form -->
+        @if (activeTab() === 'client') {
+          <div class="form-row">
+            <div class="form-group mb-0">
+              <label class="form-label">Date <span class="required">*</span></label>
+              <input class="form-control" type="date" [(ngModel)]="clientForm.transactionDate" />
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Client <span class="required">*</span></label>
+              <select class="form-control" [(ngModel)]="clientForm.clientId">
+                <option [ngValue]="0" disabled>Select client…</option>
+                @for (c of clients(); track c.clientId) {
+                  <option [ngValue]="c.clientId">{{ c.clientName }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0">
+              <label class="form-label">Credit Amount (₹)</label>
+              <input class="form-control" type="number" min="0" [(ngModel)]="clientForm.creditAmount" />
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Debit Amount (₹)</label>
+              <input class="form-control" type="number" min="0" [(ngModel)]="clientForm.debitAmount" />
+            </div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0">
+              <label class="form-label">Payment Type</label>
+              <select class="form-control" [(ngModel)]="clientForm.paymentTypeId">
+                <option [ngValue]="undefined">— None —</option>
+                @for (pt of paymentTypes(); track pt.paymentTypeId) {
+                  <option [ngValue]="pt.paymentTypeId">{{ pt.paymentTypeName }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">By Whom</label>
+              <select class="form-control" [(ngModel)]="clientForm.byWhomId">
+                <option [ngValue]="undefined">— None —</option>
+                @for (w of whoms(); track w.whomId) {
+                  <option [ngValue]="w.whomId">{{ w.whomName }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group mt-16">
+            <label class="form-label">Remarks</label>
+            <input class="form-control" [(ngModel)]="clientForm.remarks" />
+          </div>
+        }
+
+        <!-- Supplier Transaction Form -->
+        @if (activeTab() === 'supplier') {
+          <div class="form-row">
+            <div class="form-group mb-0">
+              <label class="form-label">Date <span class="required">*</span></label>
+              <input class="form-control" type="date" [(ngModel)]="suppForm.transactionDate" />
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Client <span class="required">*</span></label>
+              <select class="form-control" [(ngModel)]="suppForm.clientId">
+                <option [ngValue]="0" disabled>Select client…</option>
+                @for (c of clients(); track c.clientId) { <option [ngValue]="c.clientId">{{ c.clientName }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0">
+              <label class="form-label">Supplier <span class="required">*</span></label>
+              <select class="form-control" [(ngModel)]="suppForm.supplierId">
+                <option [ngValue]="0" disabled>Select supplier…</option>
+                @for (s of suppliers(); track s.supplierId) { <option [ngValue]="s.supplierId">{{ s.supplierName }}</option> }
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Material <span class="required">*</span></label>
+              <select class="form-control" [(ngModel)]="suppForm.materialId">
+                <option [ngValue]="0" disabled>Select material…</option>
+                @for (m of materials(); track m.materialId) { <option [ngValue]="m.materialId">{{ m.materialName }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="form-row-3 mt-16">
+            <div class="form-group mb-0"><label class="form-label">Quantity</label><input class="form-control" type="number" min="0" [(ngModel)]="suppForm.quantity" /></div>
+            <div class="form-group mb-0"><label class="form-label">Unit</label><input class="form-control" [(ngModel)]="suppForm.unit" /></div>
+            <div class="form-group mb-0"><label class="form-label">Rate (₹)</label><input class="form-control" type="number" min="0" [(ngModel)]="suppForm.rate" /></div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0"><label class="form-label">Amount (₹)</label><input class="form-control" type="number" min="0" [(ngModel)]="suppForm.amount" /></div>
+            <div class="form-group mb-0"><label class="form-label">Paid Amount (₹)</label><input class="form-control" type="number" min="0" [(ngModel)]="suppForm.paidAmount" /></div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0">
+              <label class="form-label">Payment Type</label>
+              <select class="form-control" [(ngModel)]="suppForm.paymentTypeId">
+                <option [ngValue]="undefined">— None —</option>
+                @for (pt of paymentTypes(); track pt.paymentTypeId) { <option [ngValue]="pt.paymentTypeId">{{ pt.paymentTypeName }}</option> }
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">To Whom</label>
+              <select class="form-control" [(ngModel)]="suppForm.toWhomId">
+                <option [ngValue]="undefined">— None —</option>
+                @for (w of whoms(); track w.whomId) { <option [ngValue]="w.whomId">{{ w.whomName }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0"><label class="form-label">Remarks</label><input class="form-control" [(ngModel)]="suppForm.remarks" /></div>
+            <div class="form-group mb-0" style="align-items:flex-end;justify-content:flex-end;display:flex">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" [(ngModel)]="suppForm.isSubBill" /> Sub-Bill
+              </label>
+            </div>
+          </div>
+        }
+
+        <!-- Sub-Contractor Transaction Form -->
+        @if (activeTab() === 'subcontractor') {
+          <div class="form-row">
+            <div class="form-group mb-0">
+              <label class="form-label">Date <span class="required">*</span></label>
+              <input class="form-control" type="date" [(ngModel)]="subForm.transactionDate" />
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Client <span class="required">*</span></label>
+              <select class="form-control" [(ngModel)]="subForm.clientId">
+                <option [ngValue]="0" disabled>Select client…</option>
+                @for (c of clients(); track c.clientId) { <option [ngValue]="c.clientId">{{ c.clientName }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0">
+              <label class="form-label">Sub-Contractor <span class="required">*</span></label>
+              <select class="form-control" [(ngModel)]="subForm.subContractorId">
+                <option [ngValue]="0" disabled>Select sub-contractor…</option>
+                @for (s of subContractors(); track s.subContractorId) { <option [ngValue]="s.subContractorId">{{ s.subContractorName }}</option> }
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">Job Work <span class="required">*</span></label>
+              <select class="form-control" [(ngModel)]="subForm.jobWorkId">
+                <option [ngValue]="0" disabled>Select job work…</option>
+                @for (j of jobWorks(); track j.jobWorkId) { <option [ngValue]="j.jobWorkId">{{ j.jobWorkName }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="form-row-3 mt-16">
+            <div class="form-group mb-0"><label class="form-label">Quantity</label><input class="form-control" type="number" min="0" [(ngModel)]="subForm.quantity" /></div>
+            <div class="form-group mb-0"><label class="form-label">Unit</label><input class="form-control" [(ngModel)]="subForm.unit" /></div>
+            <div class="form-group mb-0"><label class="form-label">Rate (₹)</label><input class="form-control" type="number" min="0" [(ngModel)]="subForm.rate" /></div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0"><label class="form-label">Amount (₹)</label><input class="form-control" type="number" min="0" [(ngModel)]="subForm.amount" /></div>
+            <div class="form-group mb-0"><label class="form-label">Paid Amount (₹)</label><input class="form-control" type="number" min="0" [(ngModel)]="subForm.paidAmount" /></div>
+          </div>
+          <div class="form-row mt-16">
+            <div class="form-group mb-0">
+              <label class="form-label">Payment Type</label>
+              <select class="form-control" [(ngModel)]="subForm.paymentTypeId">
+                <option [ngValue]="undefined">— None —</option>
+                @for (pt of paymentTypes(); track pt.paymentTypeId) { <option [ngValue]="pt.paymentTypeId">{{ pt.paymentTypeName }}</option> }
+              </select>
+            </div>
+            <div class="form-group mb-0">
+              <label class="form-label">To Whom</label>
+              <select class="form-control" [(ngModel)]="subForm.toWhomId">
+                <option [ngValue]="undefined">— None —</option>
+                @for (w of whoms(); track w.whomId) { <option [ngValue]="w.whomId">{{ w.whomName }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="form-group mt-16"><label class="form-label">Remarks</label><input class="form-control" [(ngModel)]="subForm.remarks" /></div>
+        }
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save Transaction' }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showConfirm()) {
+  <app-confirm-dialog title="Delete Transaction" message="Delete this transaction record permanently?" (confirm)="doDelete()" (cancel)="showConfirm.set(false)" />
+}

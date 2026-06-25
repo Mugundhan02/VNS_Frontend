@@ -1,0 +1,101 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Sub-Contractors</h2>
+      <p class="page-subtitle">Manage site sub-contractors</p>
+    </div>
+    @if (auth.hasRole('Owner','Admin')) {
+      <button class="btn btn-primary" (click)="openCreate()">+ Add Sub-Contractor</button>
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <input class="form-control" style="max-width:320px" type="search" placeholder="Search…"
+        [ngModel]="search()" (ngModelChange)="search.set($event)" />
+      <span class="text-muted text-sm">{{ filtered.length }} record(s)</span>
+    </div>
+    @if (loading()) {
+      <div class="loading-wrapper"><div class="spinner"></div></div>
+    } @else if (filtered.length === 0) {
+      <div class="empty-state"><p>No sub-contractors found.</p></div>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Work</th><th>Rate</th><th>Actions</th></tr></thead>
+          <tbody>
+            @for (item of filtered; track item.subContractorId) {
+              <tr>
+                <td>{{ item.subContractorId }}</td>
+                <td class="font-medium">{{ item.subContractorName }}</td>
+                <td>{{ item.mobileNumber || item.phoneNumber || '—' }}</td>
+                <td>{{ item.workName || '—' }}</td>
+                <td>{{ item.rate != null ? ('₹' + item.rate) : '—' }}</td>
+                <td>
+                  <div class="table-actions">
+                    @if (auth.hasRole('Owner','Admin')) {
+                      <button class="btn btn-secondary btn-sm" (click)="openEdit(item)">Edit</button>
+                      @if (auth.hasRole('Owner')) {
+                        <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.subContractorId)">Delete</button>
+                      }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ editingId() ? 'Edit Sub-Contractor' : 'Add Sub-Contractor' }}</h2>
+        <button class="btn btn-ghost btn-icon" (click)="showForm.set(false)" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (errorMsg()) { <div class="alert alert-danger">{{ errorMsg() }}</div> }
+        <div class="form-group">
+          <label class="form-label">Name <span class="required">*</span></label>
+          <input class="form-control" [(ngModel)]="form.subContractorName" />
+        </div>
+        <div class="section-title">Work Details</div>
+        <div class="form-row-3">
+          <div class="form-group mb-0"><label class="form-label">Work Name</label><input class="form-control" [(ngModel)]="form.workName" /></div>
+          <div class="form-group mb-0"><label class="form-label">ESR</label><input class="form-control" [(ngModel)]="form.esr" type="number" min="0" /></div>
+          <div class="form-group mb-0"><label class="form-label">Rate (₹)</label><input class="form-control" [(ngModel)]="form.rate" type="number" min="0" /></div>
+        </div>
+        <div class="section-title">Contact</div>
+        <div class="form-row">
+          <div class="form-group mb-0"><label class="form-label">Phone</label><input class="form-control" [(ngModel)]="form.phoneNumber" type="tel" /></div>
+          <div class="form-group mb-0"><label class="form-label">Mobile</label><input class="form-control" [(ngModel)]="form.mobileNumber" type="tel" /></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="form-group mb-0"><label class="form-label">Email</label><input class="form-control" [(ngModel)]="form.emailId" type="email" /></div>
+          <div class="form-group mb-0"><label class="form-label">Place</label><input class="form-control" [(ngModel)]="form.place" /></div>
+        </div>
+        <div class="section-title">Bank Details</div>
+        <div class="form-row">
+          <div class="form-group mb-0"><label class="form-label">Bank Name</label><input class="form-control" [(ngModel)]="form.bankName" /></div>
+          <div class="form-group mb-0"><label class="form-label">Account Number</label><input class="form-control" [(ngModel)]="form.accountNumber" /></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="form-group mb-0"><label class="form-label">IFSC Code</label><input class="form-control" [(ngModel)]="form.ifscCode" style="text-transform:uppercase" /></div>
+          <div class="form-group mb-0"><label class="form-label">PAN Card</label><input class="form-control" [(ngModel)]="form.panCardNumber" style="text-transform:uppercase" /></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showConfirm()) {
+  <app-confirm-dialog title="Delete Sub-Contractor" message="Delete this sub-contractor permanently?" (confirm)="doDelete()" (cancel)="showConfirm.set(false)" />
+}

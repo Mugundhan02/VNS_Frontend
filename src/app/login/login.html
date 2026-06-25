@@ -1,0 +1,152 @@
+<div class="auth-page">
+  <div class="auth-card">
+
+    <div class="auth-brand">
+      <span class="auth-logo">🏗️</span>
+      <h1 class="auth-title">VNS Construction</h1>
+      <p class="auth-subtitle">Build Manager Portal</p>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="auth-tabs" role="tablist">
+      <button role="tab" [attr.aria-selected]="activeTab() === 'login'"
+        class="auth-tab" [class.active]="activeTab() === 'login'"
+        (click)="setTab('login')">Sign In</button>
+      <button role="tab" [attr.aria-selected]="activeTab() === 'register'"
+        class="auth-tab" [class.active]="activeTab() === 'register'"
+        (click)="setTab('register')">Register</button>
+      <button role="tab" [attr.aria-selected]="activeTab() === 'forgot'"
+        class="auth-tab" [class.active]="activeTab() === 'forgot'"
+        (click)="setTab('forgot')">Reset Password</button>
+    </div>
+
+    <!-- Alerts -->
+    @if (errorMsg()) {
+      <div class="alert alert-danger" role="alert">{{ errorMsg() }}</div>
+    }
+    @if (successMsg()) {
+      <div class="alert alert-success" role="alert">{{ successMsg() }}</div>
+    }
+
+    <!-- ── LOGIN ── -->
+    @if (activeTab() === 'login') {
+      <form class="auth-form" (ngSubmit)="onLogin()" #loginFormRef="ngForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="login-username">Username <span class="required">*</span></label>
+          <input id="login-username" class="form-control" type="text"
+            [(ngModel)]="loginForm.userName" name="userName"
+            placeholder="Enter your username" autocomplete="username" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password <span class="required">*</span></label>
+          <div class="input-with-toggle">
+            <input id="login-password" class="form-control"
+              [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="loginForm.password" name="password"
+              placeholder="Enter your password" autocomplete="current-password" required />
+            <button type="button" class="toggle-pw" (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+              @if (showPassword()) {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              }
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" [disabled]="loading()">
+          @if (loading()) { <span class="btn-spinner"></span> Signing in… }
+          @else { Sign In }
+        </button>
+      </form>
+    }
+
+    <!-- ── REGISTER ── -->
+    @if (activeTab() === 'register') {
+      <form class="auth-form" (ngSubmit)="onRegister()" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="reg-company">Company Name <span class="required">*</span></label>
+          <input id="reg-company" class="form-control" type="text"
+            [(ngModel)]="registerForm.companyName" name="companyName"
+            placeholder="e.g. VNS Construction Pvt Ltd" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-username">Username <span class="required">*</span></label>
+          <input id="reg-username" class="form-control" type="text"
+            [(ngModel)]="registerForm.userName" name="userName"
+            placeholder="Choose a username" autocomplete="username" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email <span class="required">*</span></label>
+          <input id="reg-email" class="form-control" type="email"
+            [(ngModel)]="registerForm.emailId" name="emailId"
+            placeholder="email@company.com" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-pw">Password <span class="required">*</span></label>
+          <div class="input-with-toggle">
+            <input id="reg-pw" class="form-control"
+              [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="registerForm.password" name="password"
+              placeholder="Min. 6 characters" autocomplete="new-password" required />
+            <button type="button" class="toggle-pw" (click)="showPassword.set(!showPassword())" aria-label="Toggle password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-confirm">Confirm Password <span class="required">*</span></label>
+          <div class="input-with-toggle">
+            <input id="reg-confirm" class="form-control"
+              [type]="showConfirmPassword() ? 'text' : 'password'"
+              [(ngModel)]="registerForm.confirmPassword" name="confirmPassword"
+              placeholder="Repeat password" autocomplete="new-password" required />
+            <button type="button" class="toggle-pw" (click)="showConfirmPassword.set(!showConfirmPassword())" aria-label="Toggle confirm password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" [disabled]="loading()">
+          @if (loading()) { <span class="btn-spinner"></span> Registering… }
+          @else { Create Account }
+        </button>
+      </form>
+    }
+
+    <!-- ── FORGOT PASSWORD ── -->
+    @if (activeTab() === 'forgot') {
+      <form class="auth-form" (ngSubmit)="onForgotPassword()" novalidate>
+        <p class="auth-hint">Enter your registered email and set a new password.</p>
+        <div class="form-group">
+          <label class="form-label" for="forgot-email">Email Address <span class="required">*</span></label>
+          <input id="forgot-email" class="form-control" type="email"
+            [(ngModel)]="forgotForm.emailId" name="emailId"
+            placeholder="email@company.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="forgot-pw">New Password <span class="required">*</span></label>
+          <div class="input-with-toggle">
+            <input id="forgot-pw" class="form-control"
+              [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="forgotForm.newPassword" name="newPassword"
+              placeholder="Min. 6 characters" required />
+            <button type="button" class="toggle-pw" (click)="showPassword.set(!showPassword())" aria-label="Toggle password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="forgot-confirm">Confirm New Password <span class="required">*</span></label>
+          <input id="forgot-confirm" class="form-control" type="password"
+            [(ngModel)]="forgotForm.confirmNewPassword" name="confirmNewPassword"
+            placeholder="Repeat new password" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-full" [disabled]="loading()">
+          @if (loading()) { <span class="btn-spinner"></span> Resetting… }
+          @else { Reset Password }
+        </button>
+      </form>
+    }
+
+  </div>
+</div>

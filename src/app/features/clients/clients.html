@@ -1,0 +1,192 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Clients</h2>
+      <p class="page-subtitle">Manage construction contract clients</p>
+    </div>
+    @if (auth.hasRole('Owner','Admin')) {
+      <button class="btn btn-primary" (click)="openCreate()">+ Add Client</button>
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <input class="form-control search-input" type="search" placeholder="Search clients…"
+        [ngModel]="search()" (ngModelChange)="search.set($event)" />
+      <span class="text-muted text-sm">{{ filtered.length }} record(s)</span>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-wrapper"><div class="spinner"></div></div>
+    } @else if (filtered.length === 0) {
+      <div class="empty-state"><p>No clients found.</p></div>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Client Name</th>
+              <th>Phone</th>
+              <th>Place</th>
+              <th>Estimate Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filtered; track item.clientId) {
+              <tr>
+                <td>{{ item.clientId }}</td>
+                <td class="font-medium">{{ item.clientName }}</td>
+                <td>{{ item.mobileNumber || item.phoneNumber || '—' }}</td>
+                <td>{{ item.place || '—' }}</td>
+                <td>{{ item.estimateAmount != null ? ('₹' + (item.estimateAmount | number:'1.2-2')) : '—' }}</td>
+                <td>
+                  <div class="table-actions">
+                    @if (auth.hasRole('Owner','Admin')) {
+                      <button class="btn btn-secondary btn-sm" (click)="openEdit(item)">Edit</button>
+                      @if (auth.hasRole('Owner')) {
+                        <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.clientId)">Delete</button>
+                      }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Form Modal -->
+@if (showForm()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ editingId() ? 'Edit Client' : 'Add Client' }}</h2>
+        <button class="btn btn-ghost btn-icon" (click)="showForm.set(false)" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (errorMsg()) { <div class="alert alert-danger">{{ errorMsg() }}</div> }
+
+        <div class="form-group">
+          <label class="form-label">Client Name <span class="required">*</span></label>
+          <input class="form-control" [(ngModel)]="form.clientName" placeholder="Full client name" />
+        </div>
+
+        <div class="section-title">Address</div>
+        <div class="form-row">
+          <div class="form-group mb-0">
+            <label class="form-label">Door / Street</label>
+            <input class="form-control" [(ngModel)]="form.doorNoAndStreetName" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Area</label>
+            <input class="form-control" [(ngModel)]="form.areaName" />
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="form-group mb-0">
+            <label class="form-label">Place</label>
+            <input class="form-control" [(ngModel)]="form.place" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Pin Code</label>
+            <input class="form-control" [(ngModel)]="form.pinCode" maxlength="10" />
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="form-group mb-0">
+            <label class="form-label">City / Taluk</label>
+            <input class="form-control" [(ngModel)]="form.cityOrTalukName" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">District & State</label>
+            <input class="form-control" [(ngModel)]="form.districtAndStateName" />
+          </div>
+        </div>
+
+        <div class="section-title">Contact</div>
+        <div class="form-row">
+          <div class="form-group mb-0">
+            <label class="form-label">Phone</label>
+            <input class="form-control" [(ngModel)]="form.phoneNumber" type="tel" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Mobile</label>
+            <input class="form-control" [(ngModel)]="form.mobileNumber" type="tel" />
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="form-group mb-0">
+            <label class="form-label">Email</label>
+            <input class="form-control" [(ngModel)]="form.emailId" type="email" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Website</label>
+            <input class="form-control" [(ngModel)]="form.websiteName" type="url" />
+          </div>
+        </div>
+
+        <div class="section-title">Bank Details</div>
+        <div class="form-row">
+          <div class="form-group mb-0">
+            <label class="form-label">Bank Name</label>
+            <input class="form-control" [(ngModel)]="form.bankName" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Branch</label>
+            <input class="form-control" [(ngModel)]="form.bankBranch" />
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="form-group mb-0">
+            <label class="form-label">Account Name</label>
+            <input class="form-control" [(ngModel)]="form.accountName" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Account Type</label>
+            <input class="form-control" [(ngModel)]="form.accountType" />
+          </div>
+        </div>
+        <div class="form-group mt-16">
+          <label class="form-label">IFSC Code</label>
+          <input class="form-control" [(ngModel)]="form.ifscCode" maxlength="11" style="text-transform:uppercase" />
+        </div>
+
+        <div class="section-title">Estimate Details</div>
+        <div class="form-row-3">
+          <div class="form-group mb-0">
+            <label class="form-label">Units</label>
+            <input class="form-control" [(ngModel)]="form.estimateUnit" type="number" min="0" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Rate (₹)</label>
+            <input class="form-control" [(ngModel)]="form.estimateRate" type="number" min="0" />
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Amount (₹)</label>
+            <input class="form-control" [(ngModel)]="form.estimateAmount" type="number" min="0" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save Client' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm Delete -->
+@if (showConfirm()) {
+  <app-confirm-dialog
+    title="Delete Client"
+    message="This will permanently delete the client and all related records. This action cannot be undone."
+    (confirm)="doDelete()"
+    (cancel)="showConfirm.set(false)" />
+}

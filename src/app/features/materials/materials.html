@@ -1,0 +1,129 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Materials & Job Works</h2>
+      <p class="page-subtitle">Manage material catalogue and job work types</p>
+    </div>
+    @if (auth.hasRole('Owner','Admin')) {
+      <button class="btn btn-primary" (click)="openCreate()">+ Add {{ activeTab() === 'materials' ? 'Material' : 'Job Work' }}</button>
+    }
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab() === 'materials'" (click)="activeTab.set('materials'); search.set('')">Materials ({{ materials().length }})</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'jobworks'" (click)="activeTab.set('jobworks'); search.set('')">Job Works ({{ jobWorks().length }})</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <input class="form-control" style="max-width:320px" type="search" placeholder="Search…"
+        [ngModel]="search()" (ngModelChange)="search.set($event)" />
+    </div>
+
+    @if (loading()) {
+      <div class="loading-wrapper"><div class="spinner"></div></div>
+    } @else {
+      <div class="table-wrapper">
+        @if (activeTab() === 'materials') {
+          @if (filteredMaterials.length === 0) {
+            <div class="empty-state"><p>No materials found.</p></div>
+          } @else {
+            <table>
+              <thead><tr><th>#</th><th>Material Name</th><th>Unit</th><th>Rate (₹)</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (item of filteredMaterials; track item.materialId) {
+                  <tr>
+                    <td>{{ item.materialId }}</td>
+                    <td class="font-medium">{{ item.materialName }}</td>
+                    <td>{{ item.unit || '—' }}</td>
+                    <td>{{ item.rate | number:'1.2-2' }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner','Admin')) {
+                          <button class="btn btn-secondary btn-sm" (click)="openEdit(item)">Edit</button>
+                          @if (auth.hasRole('Owner')) {
+                            <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.materialId)">Delete</button>
+                          }
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        } @else {
+          @if (filteredJobWorks.length === 0) {
+            <div class="empty-state"><p>No job works found.</p></div>
+          } @else {
+            <table>
+              <thead><tr><th>#</th><th>Job Work Name</th><th>Unit</th><th>Rate (₹)</th><th>Actions</th></tr></thead>
+              <tbody>
+                @for (item of filteredJobWorks; track item.jobWorkId) {
+                  <tr>
+                    <td>{{ item.jobWorkId }}</td>
+                    <td class="font-medium">{{ item.jobWorkName }}</td>
+                    <td>{{ item.unit || '—' }}</td>
+                    <td>{{ item.rate | number:'1.2-2' }}</td>
+                    <td>
+                      <div class="table-actions">
+                        @if (auth.hasRole('Owner','Admin')) {
+                          <button class="btn btn-secondary btn-sm" (click)="openEdit(item)">Edit</button>
+                          @if (auth.hasRole('Owner')) {
+                            <button class="btn btn-danger btn-sm" (click)="confirmDelete(item.jobWorkId)">Delete</button>
+                          }
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ editingId() ? 'Edit' : 'Add' }} {{ activeTab() === 'materials' ? 'Material' : 'Job Work' }}</h2>
+        <button class="btn btn-ghost btn-icon" (click)="showForm.set(false)" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (errorMsg()) { <div class="alert alert-danger">{{ errorMsg() }}</div> }
+        @if (activeTab() === 'materials') {
+          <div class="form-group">
+            <label class="form-label">Material Name <span class="required">*</span></label>
+            <input class="form-control" [(ngModel)]="matForm.materialName" />
+          </div>
+          <div class="form-row">
+            <div class="form-group mb-0"><label class="form-label">Unit</label><input class="form-control" [(ngModel)]="matForm.unit" placeholder="e.g. Kg, MT, m³" /></div>
+            <div class="form-group mb-0"><label class="form-label">Rate (₹)</label><input class="form-control" [(ngModel)]="matForm.rate" type="number" min="0" /></div>
+          </div>
+        } @else {
+          <div class="form-group">
+            <label class="form-label">Job Work Name <span class="required">*</span></label>
+            <input class="form-control" [(ngModel)]="jwForm.jobWorkName" />
+          </div>
+          <div class="form-row">
+            <div class="form-group mb-0"><label class="form-label">Unit</label><input class="form-control" [(ngModel)]="jwForm.unit" placeholder="e.g. Sqft, RFT" /></div>
+            <div class="form-group mb-0"><label class="form-label">Rate (₹)</label><input class="form-control" [(ngModel)]="jwForm.rate" type="number" min="0" /></div>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showConfirm()) {
+  <app-confirm-dialog [title]="'Delete ' + (activeTab() === 'materials' ? 'Material' : 'Job Work')" message="Delete this record permanently?" (confirm)="doDelete()" (cancel)="showConfirm.set(false)" />
+}
